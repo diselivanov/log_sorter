@@ -1,6 +1,6 @@
 import argparse
 import os
-import time
+from datetime import datetime
 from sorter import load_paths, load_rules, sort_logs, StreamSorter
 
 C_RESET = "\033[0m"
@@ -23,13 +23,14 @@ def c(text: str, color: str = "") -> str:
 def print_stats(stats: dict, title: str = ""):
     total = sum(stats.values())
     if title:
-        print(c(title, C_BOLD))
-    print(f"{c('lines', C_BOLD)}   {total}")
+        print(f"  {c(title, C_BOLD)}")
+    print(f"  {c('lines', C_DIM)}  {total}")
     width = max((len(k) for k in stats), default=0)
     for cat, count in stats.items():
         color = C_CAT.get(cat, "")
         bar = "·" * min(count, 40)
-        print(f"  {c(cat.ljust(width), color)}  {str(count).rjust(4)}  {c(bar, C_DIM)}")
+        print(f"    {c(cat.ljust(width), color)}  {str(count).rjust(4)}  {c(bar, C_DIM)}")
+    print()
 
 
 def run_follow(input_paths, output_dir, rules):
@@ -43,16 +44,19 @@ def run_follow(input_paths, output_dir, rules):
         cats = [k for k in sorter.stats if k != "unmatched"
                 and any(p in low for p in
                         [x.lower() for x in rules.get(k, {}).get("patterns", [])])]
-        if cats:
-            tag = ",".join(cats)
-            print(f"  {c(tag, C_CAT.get(cats[0], ''))}  {line.rstrip()}")
+        if not cats:
+            return
+        ts = datetime.now().strftime("%H:%M:%S")
+        tag = c(",".join(cats).ljust(22), C_BOLD)
+        print(f"  {c(ts, C_DIM)}  {tag}  {line.rstrip()}")
 
-    print(c("follow", C_BOLD))
+    print()
+    print(f"  {c('log-sorter', C_BOLD)}  {c('live', C_DIM)}")
     for p in input_paths:
-        mark = c("ok", "\033[92m") if os.path.isfile(p) else c("wait", "\033[90m")
-        print(f"  {mark}  {p}")
-    print(f"{c('output', C_BOLD)}  {output_dir}")
-    print(c("Ctrl+C to stop", C_DIM))
+        mark = c("●", "\033[92m") if os.path.isfile(p) else c("○", "\033[90m")
+        print(f"    {mark}  {p}")
+    print(f"    {c('→', C_DIM)}  {output_dir}")
+    print(f"  {c('Ctrl+C', C_DIM)} — stop")
     print()
 
     try:
@@ -61,8 +65,7 @@ def run_follow(input_paths, output_dir, rules):
         pass
     finally:
         sorter.close()
-        print()
-        print_stats(sorter.stats, "stopped")
+        print_stats(sorter.stats, "session")
 
 
 def main():
@@ -90,24 +93,21 @@ def main():
     stats = sort_logs(input_paths, output_dir, rules)
 
     print()
-    print(c("logs", C_BOLD))
+    print(f"  {c('log-sorter', C_BOLD)}  {c('scan', C_DIM)}")
     for p in input_paths:
-        mark = c("ok", "\033[92m") if os.path.isfile(p) else c("skip", "\033[90m")
-        print(f"  {mark}  {p}")
-
+        mark = c("●", "\033[92m") if os.path.isfile(p) else c("○", "\033[90m")
+        print(f"    {mark}  {p}")
+    print(f"    {c('→', C_DIM)}  {output_dir}")
     print()
-    print(f"{c('output', C_BOLD)}  {output_dir}")
     print_stats(stats)
     summary_path = os.path.join(output_dir, "summary.txt")
     with open(summary_path, "w", encoding="utf-8") as f:
         f.write(f"total: {sum(stats.values())}\n")
         for cat, count in stats.items():
             f.write(f"{cat}: {count}\n")
-    print()
-    print(f"{c('summary', C_BOLD)}  {summary_path}")
+    print(f"  {c('summary', C_DIM)}  {summary_path}")
     print()
 
 
 if __name__ == "__main__":
     main()
-
