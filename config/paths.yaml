@@ -1,0 +1,4 @@
+logs:
+  - /home/test/log_sorter/logs/input.log
+
+output_dir: /home/test/log_sorter/output

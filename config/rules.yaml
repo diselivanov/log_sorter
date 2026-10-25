@@ -1,0 +1,61 @@
+# Правила классификации строк.
+# patterns — подстроки (регистронезависимо)
+# regex    — регулярные выражения (опционально)
+
+categories:
+  users:
+    patterns:
+      - "Failed password"
+      - "Accepted password"
+      - "session opened"
+      - "session closed"
+      - "invalid user"
+      - "authentication failure"
+      - "sudo:"
+      - "su:"
+      - "login"
+      - "logout"
+
+  config:
+    patterns:
+      - config
+      - configuration
+      - modified
+      - changed
+      - installed
+      - removed
+      - package
+      - apt
+      - systemd
+      - service
+      - restart
+
+  network:
+    patterns:
+      - connection
+      - port
+      - iptables
+      - firewall
+      - ssh
+      - refused
+      - timeout
+      - network
+      - interface
+
+  errors:
+    patterns:
+      - error
+      - critical
+      - panic
+      - segfault
+      - oom
+      - killed
+      - failed
+      - denied
+    regex:
+      - '\bOOM[- ]?Kill\b'
+
+  cron:
+    patterns:
+      - cron
+      - heartbeat
